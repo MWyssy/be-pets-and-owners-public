@@ -10,6 +10,7 @@ app.get('/owners/:id', (req, res) => {
         res.send({ owner: parsedData })        
     })
 })  
+
 app.get('/owners', (req, res) => {
     const ownersArr = [];
     fs.readdir('./data/owners').then((data) => {
@@ -76,8 +77,62 @@ app.get('/pets', (req, res) => {
 })
 
 
+app.get('/pets/:id', (req, res) => {
+    fs.readFile(`./data/pets/p${req.params.id}.json`, 'utf8').then((data) => {
+        const parsedData = JSON.parse(data);
+        res.send({ pet: parsedData })        
+    })
+}) 
 
 
+
+app.patch('/owners/:id',(req,res)=>{
+//console.log(req.body)
+const ownerId=req.params.id;
+const parsedBody= req.body
+const keys=Object.keys(parsedBody)
+console.log(keys)
+// const truekey= keys.every((key=>{
+//     console.log(key)
+//     console.log(key === "name")
+//     !(key === "name")
+// }))
+
+
+
+if(!(parsedBody.hasOwnProperty("name") || parsedBody.hasOwnProperty("age"))){
+    //console.log('false')
+    res.status(406).send('error: only name and age value can be edited')
+} 
+
+
+else{
+    const keys=Object.keys(parsedBody)
+    const values=Object.values(parsedBody)
+
+    // console.log(keys)
+    // console.log(values)
+    fs.readFile(`./data/owners/o${ownerId}.json`, 'utf8').then((data) => {
+        const parsedData = JSON.parse(data);
+        console.log(parsedData)
+        parsedData.name=parsedBody.name
+        parsedData.age=parsedBody.age
+
+        return Promise.all([parsedData,fs.writeFile(`./data/owners/o${ownerId}.json`,
+        JSON.stringify(parsedData,null,2)
+        )])
+    
+                
+    }).then((data)=>{
+        const updatedOwnerData = data[0]
+        res.status(200).send({owner:updatedOwnerData});
+
+    })
+
+    // console.log("true")
+}
+
+})
 
 
 app.listen(9090, () => console.log('App listening on port 9090!'));
