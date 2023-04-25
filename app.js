@@ -42,5 +42,42 @@ app.get('/owners/:id/pets', (req, res) => {
     })
 })
 
+app.get('/pets', (req, res) => {
+    const petsArr = [];
+    console.log(req.query)
+    const q = req.query
+    const qk= Object.keys(q)
+    const qv=Object.values(q)
+    console.log(qk)
+    console.log(qv)
+    
+    fs.readdir('./data/pets').then((data) => {
+        data.forEach((pets) => {
+            fs.readFile(`./data/pets/${pets}`).then((petsData) => {
+                const parsedData = JSON.parse(petsData);
+                petsArr.push(parsedData);
+                if (petsArr.length === data.length) {
+                    //console.log(petsArr)
+                    if(Object.keys(q).length>0){
+                        const filterPets=petsArr.filter((pet)=>{                            
+                            return qk.every(key=>{
+                                return q[key]===pet[key]
+                            })
+                        })
+
+                        
+                        res.send({pets:filterPets})
+                    }
+                    res.send({ pets: petsArr })
+                }
+            })
+        })
+    })
+})
+
+
+
+
+
 
 app.listen(9090, () => console.log('App listening on port 9090!'));
