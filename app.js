@@ -107,8 +107,7 @@ if(!(parsedBody.hasOwnProperty("name") || parsedBody.hasOwnProperty("age"))){
 
 
 else{
-    const keys=Object.keys(parsedBody)
-    const values=Object.values(parsedBody)
+   
 
     // console.log(keys)
     // console.log(values)
