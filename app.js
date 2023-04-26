@@ -1,5 +1,6 @@
 const express = require('express');
 const fs = require('fs/promises');
+const { getOwnerById, getOwners } = require('./controllers/owners.controllers');
 const app = express();
 
 app.use(express.json());
@@ -29,12 +30,7 @@ function logRequestTime(req, res, next) {
 
 const logStuff = [ logMethod, logUrl, logRequestTime ]
 
-app.get('/owners/:id', logStuff, (req, res, next) => {
-    fs.readFile(`./data/owners/o${req.params.id}.json`, 'utf8').then((data) => {
-        const parsedData = JSON.parse(data);
-        res.send({ owner: parsedData })        
-    })
-})  
+app.get('/owners/:id', logStuff, getOwnerById);
 
 app.get('/owners', logStuff, (req, res, next) => {
     const ownersArr = [];
@@ -45,11 +41,13 @@ app.get('/owners', logStuff, (req, res, next) => {
                 ownersArr.push(parsedData);
                 if (ownersArr.length === data.length) {
                     res.send({ owners: ownersArr })
+                    next()
                 }
             })
         })
     })
 })
+
 app.get('/owners/:id/pets', logStuff, (req, res, next) => {
     const petsArr = [];
     fs.readdir('./data/pets').then((files) => {
@@ -66,16 +64,13 @@ app.get('/owners/:id/pets', logStuff, (req, res, next) => {
             })
         })
     })
+    next();
 })
 
 app.get('/pets', logStuff, (req, res, next) => {
     const petsArr = [];
-    console.log(req.query)
     const q = req.query
     const qk= Object.keys(q)
-    const qv=Object.values(q)
-    console.log(qk)
-    console.log(qv)
     
     fs.readdir('./data/pets').then((data) => {
         data.forEach((pets) => {
@@ -93,8 +88,10 @@ app.get('/pets', logStuff, (req, res, next) => {
 
                         
                         res.send({pets:filterPets})
+                        next()
                     }
                     res.send({ pets: petsArr })
+                    next()
                 }
             })
         })
@@ -106,14 +103,13 @@ app.get('/pets/:id', logStuff, (req, res, next) => {
     fs.readFile(`./data/pets/p${req.params.id}.json`, 'utf8').then((data) => {
         const parsedData = JSON.parse(data);
         res.send({ pet: parsedData })        
+        next();
     })
 }) 
 
-
-
 app.patch('/owners/:id',(req,res)=>{
-const ownerId=req.params.id;
-const parsedBody= req.body
+    const ownerId=req.params.id;
+    const parsedBody= req.body
 
     fs.readFile(`./data/owners/o${ownerId}.json`, 'utf8').then((data) => {
         const parsedData = JSON.parse(data);
@@ -124,12 +120,12 @@ const parsedBody= req.body
         return Promise.all([parsedData,fs.writeFile(`./data/owners/o${ownerId}.json`,
         JSON.stringify(parsedData,null,2)
         )])
-    
+
                 
     }).then((data)=>{
         const updatedOwnerData = data[0]
         res.status(200).send({owner:updatedOwnerData});
-
+        next()
     })
 })
 
@@ -140,6 +136,7 @@ app.post('/owners', logStuff, (req, res, next) => {
 
     fs.writeFile(`./data/owners/o${idNum}.json`, JSON.stringify(newOwner, null, 2)).then(() => {
         res.status(200).send({ owner: newOwner });
+        next()
     })
 })
 
@@ -159,6 +156,7 @@ app.post('/owners/:id/pets', logStuff, (req, res, next) => {
     })
     .then((data) => {
         res.status(200).send({ pet: data[0] })
+        next()
     })
 })
 
@@ -167,6 +165,7 @@ app.delete('/pets/:id', logStuff, (req, res, next) => {
 
     fs.rm(`./data/pets/p${id}.json`).then(() => {
         res.status(200).send(`p${id} successfully deleted`)
+        next()
     })
 })
 
@@ -192,6 +191,7 @@ app.delete('/owners/:id', logStuff, (req, res, next) => {
     })
     .then(() => {
         res.status(200).send(`o${id} and their pets and have been successfully deleted`)
+        next()
     })
 }) 
 

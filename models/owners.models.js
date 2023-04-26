@@ -7,8 +7,10 @@ exports.fetchOwnerById=(id)=>{
         const parsedData = JSON.parse(data);
         return parsedData
     }).catch((err)=>{
-    console.log(err)
+        console.log('MODEL: ', err)
+        return 'Error, that page does not exist'
     })
 
 
 }
+
